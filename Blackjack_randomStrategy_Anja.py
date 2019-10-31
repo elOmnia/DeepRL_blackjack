@@ -1,4 +1,9 @@
 import gym
+import numpy as np
+import os
+SEP = ';'
+PATH = '/home/anjak/Dokumente'
+
 
 
 class BlackJackRandomAgent():
@@ -31,6 +36,15 @@ class BlackJackRandomAgent():
                 current_state = obs
             print('finished run with reward', reward);
 
+    def write_csv(matrix, file_name):
+        # file_name= 'qlearningmatrixgridproblems.csv'
+        outpath = os.path.join(PATH, file_name)
+        np.savetxt(outpath, matrix, delimiter=SEP)
+
+    def read_csv(inpath):
+        # inpath = '/home/anjak/Dokumente/qlearningmatrix.csv'
+        matrix = np.loadtxt(open(inpath, "rb"), delimiter=SEP, skiprows=0)
+        return matrix
 
 
 
