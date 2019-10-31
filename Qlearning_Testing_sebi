@@ -1,0 +1,146 @@
+import gym
+import random
+
+class Agent():
+    def __init__(self, env, epsilon=1.0, alpha=0.5, gamma=0.9, num_hands_to_train=30000):
+        self.env = env
+
+        # Looks like n is number of valid actions from the source code
+        self.valid_actions = list(range(self.env.action_space.n))
+
+        # Set parameters of the learning agent
+        self.Q = dict()          # Q-table
+        self.epsilon = epsilon   # Random exploration rate
+        self.alpha = alpha       # Learning rate
+        self.gamma = gamma       # Discount rate- closer to 1 learns well into distant future
+
+        self.num_hands_to_train = num_hands_to_train # Change epsilon each episode based on this
+        self.small_decrement = (0.1 * epsilon) / (0.3 * num_hands_to_train) # reduces epsilon slowly
+        self.big_decrement = (0.8 * epsilon) / (0.4 * num_hands_to_train) # reduces epilon faster
+
+        self.num_hands_to_train_left = num_hands_to_train
+
+    def update_parameters(self):
+        """
+        Update epsilon and alpha after each action
+        Set them to 0 if not learning
+        """
+        if self.num_hands_to_train_left > 0.7 * self.num_hands_to_train:
+            self.epsilon -= self.small_decrement
+        elif self.num_hands_to_train_left > 0.3 * self.num_hands_to_train:
+            self.epsilon -= self.big_decrement
+        elif self.num_hands_to_train_left > 0:
+            self.epsilon -= self.small_decrement
+        else:
+            self.epsilon = 0.0
+            self.alpha = 0.0
+
+        self.num_hands_to_train_left -= 1
+
+    def create_Q_if_new_observation(self, observation):
+        """
+        Set intial Q values to 0.0 if observation not already in Q table
+        """
+        if observation not in self.Q:
+            self.Q[observation] = dict((action, 0.0) for action in self.valid_actions)
+
+    def get_maxQ(self, observation):
+        """
+        Called when the agent is asked to find the maximum Q-value of
+        all actions based on the 'observation' the environment is in.
+        """
+        self.create_Q_if_new_observation(observation)
+        return max(self.Q[observation].values())
+
+    def choose_action(self, observation):
+        """
+        Choose which action to take, based on the observation.
+        If observation is seen for the first time, initialize its Q values to 0.0
+        """
+        self.create_Q_if_new_observation(observation)
+
+        # uniformly distributed random number > epsilon happens with probability 1-epsilon
+        if random.random() > self.epsilon:
+            maxQ = self.get_maxQ(observation)
+
+            # multiple actions could have maxQ- pick one at random in that case
+            # this is also the case when the Q value for this observation were just set to 0.0
+            action = random.choice([k for k in self.Q[observation].keys()
+                                    if self.Q[observation][k] == maxQ])
+        else:
+            action = random.choice(self.valid_actions)
+
+        self.update_parameters()
+
+        return action
+
+
+    def learn(self, observation, action, reward, next_observation):
+        """
+        Called after the agent completes an action and receives a reward.
+        This function does not consider future rewards
+        when conducting learning.
+        """
+
+        self.Q[observation][action] += self.alpha * (reward
+                                                     + (self.gamma * self.get_maxQ(next_observation))
+                                                     - self.Q[observation][action])
+
+env = gym.make('Blackjack-v0')
+
+agent = Agent(env=env, epsilon=1.0, alpha=0.01, gamma=0.01, num_hands_to_train=30000)
+
+num_rounds = 10000  # Payout calculated over num_rounds
+num_samples = 1000  # num_rounds simulated over num_samples
+
+payouts = []
+
+observation = env.reset()
+round = 1
+total_payout = 0  # to store total payout over 'num_rounds'
+# Take action based on Q-table of the agent and learn based on that until 'num_hands_to_train' = 0
+while round <= num_rounds * num_samples:
+    action = agent.choose_action(observation)
+    next_observation, payout, is_done, _ = env.step(action)
+    agent.learn(observation, action, payout, next_observation)
+    payouts.append(payout)
+    observation = next_observation
+    if is_done:
+        observation = env.reset()  # Environment deals new cards to player and dealer
+        round += 1
+
+num_observations = 0
+list_players_hand = range(1, 22)
+list_dealers_upcard = range(1, 11)
+
+
+def readable_action(observation, agent):
+    """
+    Pass observation to agent and get human readable action
+    H is hit, S is stick and '-' means the state is unseen and a random action is taken
+    """
+    if observation not in agent.Q:
+        action = "-"
+    else:
+        action = "H" if agent.choose_action(observation) else "S"
+    return action
+
+
+# Print headers to give more information about output
+print("{:^10} | {:^50} | {:^50}".format("Player's", "Dealer's upcard when ace is not usable",
+                                        "Dealer's upcard when ace is usable"))
+print("{0:^10} | {1} | {1}".format("Hand", [str(upcard) if not upcard == 10 else 'A'
+                                            for upcard in list_dealers_upcard]))
+print(''.join(['-' for _ in range(116)]))
+for players_hand in list_players_hand:
+    actions_usable = []
+    actions_not_usable = []
+    for dealers_upcard in list_dealers_upcard:
+        observation = (players_hand, dealers_upcard, False)
+        actions_not_usable.append(readable_action(observation, agent))
+        observation = (players_hand, dealers_upcard, True)
+        actions_usable.append(readable_action(observation, agent))
+
+    print("{:>10} | {} | {}".format(players_hand, actions_not_usable, actions_usable))
+
+print("Average payout after {} rounds is {}".format(num_rounds, sum(payouts) / num_samples))
