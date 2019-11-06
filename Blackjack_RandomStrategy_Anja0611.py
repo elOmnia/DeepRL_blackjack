@@ -8,7 +8,10 @@ env.seed(0)
 env.reset()
 
 num_rounds = 100  # Payout calculated over num_rounds
+# corresponds to number of episodes in the q learning algorithm for example (how many times we assign action and take
+# a step)
 num_samples = 100  # num_rounds simulated over num_samples
+# how many times we run the test (can be varied, optimally big enough for good result but not bigger than needed)
 
 average_payouts = []
 
@@ -38,4 +41,6 @@ print('Runtime ' + str(end - start))
 plt.plot(average_payouts)
 plt.xlabel('num_samples')
 plt.ylabel('payout after 1000 rounds')
-plt.show()
+plt.show(block=False)
+plt.pause(3)
+plt.close()
