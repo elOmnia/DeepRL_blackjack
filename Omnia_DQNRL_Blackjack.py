@@ -1,35 +1,29 @@
+# Codesource: https://github.com/ml874/Blackjack--Reinforcement-Learning/blob/master/Blackjack-%20DQN%20(Only%20Hit%20or%20Stand).ipynb
 import random
-
 import gym
 import numpy as np
 import pandas as pd
 from keras.layers.core import Dense
 from keras.models import Sequential
 from keras.optimizers import Adam
-
-#env = gym.make('Blackjack-v0')
-#env.seed(0)
-# env = wrappers.Monitor(env, './logs/blackjack-Q', False, True)
 import matplotlib.pyplot as plt
 from collections import deque
 import time
 
 start_time = time.time()
 
-# print(agent.model)
-
 num_rounds = 100  # Payout calculated over num_rounds
-# num_rounds: define how long a game goes
+# num_rounds: define how long a game goes, num_rounds simulated over num_samples
 num_samples = 50  # num_rounds simulated over num_samples
 
-random.seed(0)
+random.seed(0)  # TODO: necessary? if no -> remove
 
 
-class DQNAgent():
+class DQNAgent:
     def __init__(self, env, epsilon=1.0, alpha=0.5, gamma=0.9, time=30000):
         self.env = env
-        self.action_size = self.env.action_space.n
-        self.state_size = env.observation_space
+        self.action_size = self.env.action_space.n  # size of action space (here 2)
+        self.state_size = env.observation_space  # size of state space (here Discrete(2,...,)
         self.memory = deque(maxlen=2000)  # Record past experiences- [(state, action, reward, next_state, done)...]
         self.epsilon = epsilon  # Random exploration factor
         self.alpha = alpha  # Learning factor
@@ -42,20 +36,32 @@ class DQNAgent():
         self.time = time
         self.time_left = time  # Epsilon Decay
         self.small_decrement = (0.4 * epsilon) / (0.3 * self.time_left)  # reduce epsilon
-        print('HELLO')
 
     # Build Neural Net
-    def _build_model(self):
-        #         print(type(self.state_size))
-        model = Sequential()
-        model.add(Dense(32, input_shape=(2,), kernel_initializer='random_uniform', activation='relu'))
-        model.add(Dense(16, activation='relu'))
-        model.add(Dense(self.action_size, activation='softmax'))
-        model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.alpha))
+    ''' neural net is sequential with 1 hidden layers --> input layer 32 input nodes (as we have 32 possible values), 
+    kernel initializer random uniformand activation function reLu,
+    hidden layer has 16 inputs and activation function reLu, and output layer has
+    number of actions as input and activation function Softmax.
+    output computed with loss function binary cross-entropy and Adam optimizer
+    Important: Number of output units and input units of 2 consecutive layers must match
+    number of units in output layer should be equal to the number of unique class labels
+    This data-set has 32 input values and self.action_size output values, so the input and output
+    layer are of dimension 32 resp self.action_size
+    Dense: fully-connected layer, arguments are output dimensions (input shape which is 2 for first case)
+    no need to specify input dim as for sequential is same as output of last layer'''
 
+    def _build_model(self):
+        # print(type(self.state_size))
+        model = Sequential()  # initialize FeedForward Neural Network (output of each layer is input to next layer)
+        model.add(Dense(32, input_shape=(2,), kernel_initializer='random_uniform', activation='relu'))  # input layer
+        # for input layer we have to make sure that input_dim attribute matches number of features in training set
+        model.add(Dense(16, activation='relu'))  # hidden layer
+        model.add(Dense(self.action_size, activation='softmax'))  # output layer
+        model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.alpha))  # compile with Adam optimizer and
+        # binary cross-entropy for loss function (cost function in logistic regression)
         return model
 
-    #     # Remember function that stores states, actions, rewards, and done to memory
+    #     Remember function that stores states, actions, rewards, and done to memory
     #     def remember(self, state, action, reward, next_state, done):
     #         self.memory.append([state, action, reward, next_state, done])
 
@@ -63,29 +69,16 @@ class DQNAgent():
         """
         Choose which action to take, based on the observation.
         Uses greedy epsilon for exploration/exploitation.
+        if random number > epsilon, act 'rationally', otherwise choose random action
         """
 
-        # if random number > epsilon, act 'rationally'. otherwise, choose random action
-
         if np.random.rand() <= self.epsilon:
-            #             print(np.random.rand())
-            #             print(self.epsilon)
-            #             print('random')
-            #             print('-------')
-
             action = random.randrange(self.action_size)
-        #             print('random: ' + str(action))
+            # print('random: ' + str(action))
 
         else:
-            #             print('logic')
-
             action_value = self.model.predict(state)
-            #             print(action_value)
-            #             print(action_value)
-            #             print(action_value)
-            #             print('-------')
             action = np.argmax(action_value[0])
-        #             print(action)
 
         self.update_parameters()
         return action
@@ -118,37 +111,20 @@ class DQNAgent():
 
     def learn(self, state, action, reward, next_state, done):
 
-        #         minibatch = random.sample(self.memory, batch_size)
-        #         print(minibatch)
+        # minibatch = random.sample(self.memory, batch_size)
+        # print(minibatch)
 
         target = reward
-        #         print('STATE: ' + str(state))
-        #             print('next_state: ' + str(state))
-
-        #         print('target: ' + str(target))
 
         if not done:
             target = reward + self.gamma * np.amax(self.model.predict(next_state)[0])
 
-        #         print('target: ' + str(target))
-
-        #         print('action: ' + str(action))
-        #             print(self.model.predict(next_state))
-        #         print(np.amax(self.model.predict(next_state)[0]))
-
         target_f = self.model.predict(state)
-        #         print(target_f)
-        #         print('target_f: ' + str(target_f))
 
         target_f[0][action] = target
-        #         print('target_f: ' + str(target_f))
-        #             print('target_f: ' + str(target_f))
-        #         print('-------')
 
         self.model.fit(state, target_f, epochs=1, verbose=0)
-
-    #             print(self.time)
-    #         print(self.epsilon)
+        # train model by callit fit method over 1 epoch
 
     def get_optimal_strategy(self):
         index = []
@@ -170,7 +146,7 @@ class DQNAgent():
 
 if __name__ == "__main__":
     env = gym.make('Blackjack-v0')
-    agent = DQNAgent(env=env, epsilon=1.0, alpha=0.001, gamma=0.1, time=7500)
+    agent = DQNAgent(env=env, epsilon=1.0, alpha=0.001, gamma=0.1, time=7500)  # build a deep q neural net
     average_payouts = []
     state = env.reset()
     state = np.reshape(state[0:2], [1, 2])
@@ -183,7 +159,6 @@ if __name__ == "__main__":
             next_state = np.reshape(next_state[0:2], [1, 2])
 
             total_payout += payout
-            #         if agent.learning:
             agent.learn(state, action, payout, next_state, done)
 
             state = next_state
@@ -207,7 +182,9 @@ print(agent.get_optimal_strategy())
 plt.plot(average_payouts)
 plt.xlabel('num_samples')
 plt.ylabel('payout after 1000 rounds')
-plt.show()
+plt.show(block=False)
+plt.pause(3)
+plt.close()
 
 print("Average payout after {} rounds is {}".format(num_rounds, sum(average_payouts) / (num_samples)))
 
@@ -216,6 +193,8 @@ print("Average payout after {} rounds is {}".format(num_rounds, sum(average_payo
 plt.plot(average_payouts)
 plt.xlabel('num_samples')
 plt.ylabel('payout after 1000 rounds')
-plt.show()
+plt.show(block=False)
+plt.pause(3)
+plt.close()
 
-print("Average payout after {} rounds is {}".format(num_rounds, sum(average_payouts) / (num_samples)))
+print("Average payout after {} rounds is {}".format(num_rounds, sum(average_payouts) / num_samples))
