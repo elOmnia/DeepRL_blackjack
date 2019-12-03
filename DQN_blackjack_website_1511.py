@@ -165,7 +165,7 @@ if __name__ == "__main__":
         optimal_strategy.to_csv('optimal_strategy_test.csv')
         agent.play_optimal_strategy(optimal_strategy)
 
-average_payouts.to_csv('Average_payouts_100r_50s_a_0_001.csv')
+#print('average payouts',average_payouts)
 plt.plot(average_payouts)
 plt.xlabel('num_samples')
 plt.ylabel('payout after 1000 rounds')
