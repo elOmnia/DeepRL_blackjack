@@ -87,7 +87,6 @@ class DQNAgent():
         target_f[0][action] = target
         self.model.fit(state, target_f, epochs=1, verbose=0)
 
-
     def get_optimal_strategy(self):
         index = []
         for x in range(0, 21):
@@ -108,56 +107,34 @@ class DQNAgent():
 
     def play_optimal_strategy(self, optimal_strategy):
         """ for every state we are in choose the corresponding action to take according to the optimal strategy
-        that was computed and print out reward"""
-        print('RESET FROM BEGINNING')
+        that was computed and print out reward
+        Reshape the state and for that state access the index Optimal column and read the value out, if hit then
+        action 1 else zero """
+
         done = False
-        state = env.reset()  # starts in state (12,10,False)
-        print('STATE OUTSIDE', state)
-        if(state[0]>=21):
+        state = env.reset()  # starts in some state like (12,10,False)
+        if (state[0] >= 21):
             done = True
-        print('DONE',done)
         state = np.reshape(state[0:2], [1, 2])
         state = state[0][0], state[0][1]
-        print('reshaped state',state)
-        #print('action at pos state', optimal_strategy['Optimal'][state])
-        # TODO: reshape the state in the correct index format and
-        # then for that state access the index Optimal column and read value out --> it value is Hit then action = 1
-        # else if value is stand then action is 0
 
         while not done:
-            print('GO INTO DONE')
-            if(optimal_strategy['Optimal'][state] == 'Hit' or optimal_strategy['Optimal'][state] == 'Stand'):
-                #TODO: read out if there is hit or stand on pos index and change to while not done
-                print('action before', optimal_strategy['Optimal'][state])
+            if (optimal_strategy['Optimal'][state] == 'Hit' or optimal_strategy['Optimal'][state] == 'Stand'):
+                # check if there is hit or stand on pos index and change to while not done
                 action = 1 if optimal_strategy['Optimal'][state] == 'Hit' else 0
-                #action = 1 if optimal_strategy['Optimal'][state[0][0], state[0][1]] == 'Hit' else 0
-                print('action', action)
                 state, reward, done, _ = env.step(action);
-                if(state[0] >=21):
-                    print('21 or higher')
+                if state[0] >= 21:
                     break
-                print('stateinPlay',state)
                 state = np.reshape(state[0:2], [1, 2])
                 state = state[0][0], state[0][1]
-                print('reshaped state in play', state)
-                print('index', state)
-                print('reward at index', reward)
             else:
-                action = random.randint(0,1)
-                print('random action',action)
+                action = random.randint(0, 1)
                 state, reward, done, _ = env.step(action);
-                print('stateinPlay', state)
                 state = np.reshape(state[0:2], [1, 2])
                 state = state[0][0], state[0][1]
-                print('reshaped state in play', state)
-                print('index', state)
-                print('reward at index', reward)
 
         if done:
-           print('GO INTO NOT DONE')
-           print('reward', reward)
-           state= env.reset()
-           print('resetted state',state)
+            state = env.reset()
         return
 
 
@@ -188,7 +165,7 @@ if __name__ == "__main__":
 
         average_payouts.append(total_payout)
 
-        #if sample % 10 == 0:
+        # if sample % 10 == 0:
         #    print('Done with sample: ' + str(sample) + str("   --- %s seconds ---" % (time.time() - start_time)))
         #    print(agent.epsilon)
 
