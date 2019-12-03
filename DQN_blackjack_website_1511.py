@@ -43,10 +43,6 @@ class DQNAgent():
 
         return model
 
-    #     # Remember function that stores states, actions, rewards, and done to memory
-    #     def remember(self, state, action, reward, next_state, done):
-    #         self.memory.append([state, action, reward, next_state, done])
-
     def choose_action(self, state):
         """
         Choose which action to take, based on the observation.
@@ -101,8 +97,7 @@ class DQNAgent():
             df.loc[ind, 'Hit'] = outcome[0][1]
 
         df['Optimal'] = df.apply(lambda x: 'Hit' if x['Hit'] >= x['Stand'] else 'Stand', axis=1)
-        # TODO: give this another name for different parameters (mention nmber of rounds, etc)
-        df.to_csv('optimal_policy_100rounds_50samples_epsilon_0.1.csv')
+        df.to_csv('optimal_policy_100r_50s_epsilon_0_001.csv')
         return df
 
     def play_optimal_strategy(self, optimal_strategy):
@@ -113,13 +108,13 @@ class DQNAgent():
 
         done = False
         state = env.reset()  # starts in some state like (12,10,False)
-        if (state[0] >= 21):
+        if state[0] >= 21:
             done = True
         state = np.reshape(state[0:2], [1, 2])
         state = state[0][0], state[0][1]
 
         while not done:
-            if (optimal_strategy['Optimal'][state] == 'Hit' or optimal_strategy['Optimal'][state] == 'Stand'):
+            if optimal_strategy['Optimal'][state] == 'Hit' or optimal_strategy['Optimal'][state] == 'Stand':
                 # check if there is hit or stand on pos index and change to while not done
                 action = 1 if optimal_strategy['Optimal'][state] == 'Hit' else 0
                 state, reward, done, _ = env.step(action);
@@ -141,7 +136,7 @@ class DQNAgent():
 if __name__ == "__main__":
     num_rounds = 100  # Payout calculated over num_rounds
     num_samples = 50  # num_rounds simulated over num_samples
-    agent = DQNAgent(env=env, epsilon=0.1, alpha=0.001, gamma=0.1, time=7500)
+    agent = DQNAgent(env=env, epsilon=1.0, alpha=0.001, gamma=0.1, time=7500)
     average_payouts = []
     state = env.reset()
     state = np.reshape(state[0:2], [1, 2])
@@ -165,15 +160,14 @@ if __name__ == "__main__":
 
         average_payouts.append(total_payout)
 
-        # if sample % 10 == 0:
-        #    print('Done with sample: ' + str(sample) + str("   --- %s seconds ---" % (time.time() - start_time)))
-        #    print(agent.epsilon)
-
+        # get the optimal strategy and play blackjack using this strategy to see the performance
         optimal_strategy = agent.get_optimal_strategy();
         optimal_strategy.to_csv('optimal_strategy_test.csv')
         agent.play_optimal_strategy(optimal_strategy)
 
+average_payouts.to_csv('Average_payouts_100r_50s_a_0_001.csv')
 plt.plot(average_payouts)
 plt.xlabel('num_samples')
 plt.ylabel('payout after 1000 rounds')
+plt.savefig('DQN_blackjack_100r_50s_a0_001.png')
 plt.show()
