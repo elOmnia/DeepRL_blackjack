@@ -14,6 +14,11 @@ env.seed(0)
 start_time = time.time()
 
 
+def reshape_state(state):
+    state = np.reshape(state[0:2], [1,2])
+    return state
+
+
 class DQNAgent():
     def __init__(self, env, epsilon=1.0, alpha=0.5, gamma=0.9, time=30000):
         self.env = env
@@ -105,12 +110,11 @@ class DQNAgent():
         that was computed and print out reward
         Reshape the state and for that state access the index Optimal column and read the value out, if hit then
         action 1 else zero """
-
         done = False
         state = env.reset()  # starts in some state like (12,10,False)
         if state[0] >= 21:
             done = True
-        state = np.reshape(state[0:2], [1, 2])
+        state = reshape_state(state)
         state = state[0][0], state[0][1]
 
         while not done:
@@ -120,12 +124,12 @@ class DQNAgent():
                 state, reward, done, _ = env.step(action);
                 if state[0] >= 21:
                     break
-                state = np.reshape(state[0:2], [1, 2])
+                state = reshape_state(state)
                 state = state[0][0], state[0][1]
             else:
                 action = random.randint(0, 1)
                 state, reward, done, _ = env.step(action);
-                state = np.reshape(state[0:2], [1, 2])
+                state = reshape_state(state)
                 state = state[0][0], state[0][1]
 
         if done:
@@ -139,7 +143,7 @@ if __name__ == "__main__":
     agent = DQNAgent(env=env, epsilon=1.0, alpha=0.001, gamma=0.1, time=7500)
     average_payouts = []
     state = env.reset()
-    state = np.reshape(state[0:2], [1, 2])
+    state = reshape_state(state)
     for sample in range(num_samples):
         round = 1
         total_payout = 0  # store total payout per sample
@@ -151,21 +155,20 @@ if __name__ == "__main__":
             #  learning phase
             agent.learn(state, action, payout, next_state, done)
             state = next_state
-            state = np.reshape(state[0:2], [1, 2])
+            state = reshape_state(state)
 
             if done:
                 state = env.reset()  # Environment deals new cards to player and dealer
-                state = np.reshape(state[0:2], [1, 2])
+                state = reshape_state(state)
                 round += 1
 
         average_payouts.append(total_payout)
-
         # get the optimal strategy and play blackjack using this strategy to see the performance
         optimal_strategy = agent.get_optimal_strategy();
         optimal_strategy.to_csv('optimal_strategy_test.csv')
         agent.play_optimal_strategy(optimal_strategy)
 
-#print('average payouts',average_payouts)
+# print('average payouts',average_payouts)
 plt.plot(average_payouts)
 plt.xlabel('num_samples')
 plt.ylabel('payout after 1000 rounds')
