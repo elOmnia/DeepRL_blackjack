@@ -102,10 +102,10 @@ class DQNAgent():
             df.loc[ind, 'Hit'] = outcome[0][1]
 
         df['Optimal'] = df.apply(lambda x: 'Hit' if x['Hit'] >= x['Stand'] else 'Stand', axis=1)
-        df.to_csv('optimal_policy_1000000r_500000s_epsilon_0_001.csv')
+        df.to_csv('optimal_policy_100r_50s_epsilon_0_001.csv')
         return df
 
-    def play_optimal_strategy(self, optimal_strategy, tie_win, reward):
+    def play_optimal_strategy(self, optimal_strategy, reward):
         """ for every state we are in choose the corresponding action to take according to the optimal strategy
         that was computed and print out reward
         Reshape the state and for that state access the index Optimal column and read the value out, if hit then
@@ -133,10 +133,8 @@ class DQNAgent():
                 state = state[0][0], state[0][1]
 
         if done:
-            if reward != -1:
-                tie_win[int(reward)] += 1
             state = env.reset()
-        return average_payouts, tie_win
+        return average_payouts
 
 
 if __name__ == "__main__":
@@ -170,18 +168,12 @@ if __name__ == "__main__":
         # get the optimal strategy and play blackjack using this strategy to see the performance
         optimal_strategy = agent.get_optimal_strategy();
         optimal_strategy.to_csv('optimal_strategy_test.csv')
-        tie_win = [0, 0]
         reward = 0  # init reward in order that reward has a value before we assign it in the play_optimal_strat
-        play = agent.play_optimal_strategy(optimal_strategy, tie_win, reward)
-        average_payouts = play[0]
-        tie_win = play[1]
+        play = agent.play_optimal_strategy(optimal_strategy, reward)
+        average_payouts = play
         # TODO: num_samples or num_rounds are the num_episodes in other algs?
-        print(
-            "Average payout: {}, Tieing Probability: {}, Winning probability: {}".format(summed_rewards / num_samples,
-                                                                                         tie_win[0] / num_samples,
-                                                                                         tie_win[1] / num_samples))
 
-    # print('average payouts',average_payouts)
+
 plt.plot(average_payouts)
 plt.xlabel('num_samples')
 plt.ylabel('payout after 1000 rounds')
