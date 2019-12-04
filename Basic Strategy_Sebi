@@ -33,6 +33,8 @@ num_rounds = 1000 # Payout calculated over num_rounds
 num_samples = 1000 # num_rounds simulated over num_samples
 
 average_payouts = []
+payouts_list = []
+
 for _ in range(num_samples):
     round = 1
     total_payout = 0  # to store total payout over 'num_rounds'
@@ -45,6 +47,7 @@ for _ in range(num_samples):
         obs, payout, is_done, _ = env.step(action)
         total_payout += payout
         if is_done:
+            payouts_list.append(payout)
             env.reset() # Environment deals new cards to player and dealer
             round += 1
     average_payouts.append(total_payout)
