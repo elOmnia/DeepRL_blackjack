@@ -142,6 +142,7 @@ if __name__ == "__main__":
     num_samples = 50  # num_rounds simulated over num_samples #500000
     agent = DQNAgent(env=env, epsilon=1.0, alpha=0.001, gamma=0.1, time=7500)
     average_payouts = []
+    payout_list = []
     summed_rewards = 0
     state = env.reset()
     state = reshape_state(state)
@@ -160,6 +161,7 @@ if __name__ == "__main__":
             state = reshape_state(state)
 
             if done:
+                payout_list.append(payout)
                 state = env.reset()  # Environment deals new cards to player and dealer
                 state = reshape_state(state)
                 round += 1
@@ -173,6 +175,14 @@ if __name__ == "__main__":
         average_payouts = play
         # TODO: num_samples or num_rounds are the num_episodes in other algs?
 
+print(payout_list[-100:])
+payout_list_last = payout_list[-100:]
+winning = payout_list_last.count(1)/len(payout_list_last)
+drawing = payout_list_last.count(0)/len(payout_list_last)
+loosing = payout_list_last.count(-1)/len(payout_list_last)
+natural = payout_list_last.count(1.5)/len(payout_list_last)
+
+print("winnin",winning,"drawing",drawing,"loosing",loosing, "natural",natural)
 
 plt.plot(average_payouts)
 plt.xlabel('num_samples')
