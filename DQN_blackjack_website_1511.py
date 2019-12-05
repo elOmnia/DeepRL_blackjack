@@ -178,6 +178,41 @@ class DQNAgent():
         plt.show()
         return
 
+    def run(self, num_rounds, num_samples, alpha, gamma):
+        average_payouts = []
+        payout_list = []
+        summed_rewards = 0
+        state = env.reset()
+        state = reshape_state(state)
+        for sample in range(num_samples):
+            round = 1
+            total_payout = 0  # store total payout per sample
+            while round <= num_rounds:
+                action = agent.choose_action(state)
+                next_state, payout, done, _ = env.step(action)
+                summed_rewards += payout
+                next_state = np.reshape(next_state[0:2], [1, 2])
+                total_payout += payout
+                #  learning phase
+                agent.learn(state, action, payout, next_state, done)
+                state = next_state
+                state = reshape_state(state)
+
+                if done:
+                    payout_list.append(payout)
+                    state = env.reset()  # Environment deals new cards to player and dealer
+                    state = reshape_state(state)
+                    round += 1
+
+            average_payouts.append(total_payout)
+            # get the optimal strategy and play blackjack using this strategy to see the performance
+            optimal_strategy = agent.get_optimal_strategy(alpha, gamma);
+            optimal_strategy.to_csv('optimal_strategy_test.csv')
+            reward = 0  # init reward in order that reward has a value before we assign it in the play_optimal_strat
+            # comment out below line if you want to play the computed optimal strategy on our agent
+            # play = agent.play_optimal_strategy(optimal_strategy, reward)
+        return average_payouts, payout_list
+
 
 if __name__ == "__main__":
     num_rounds = 100  # Payout calculated over num_rounds #1000000
@@ -185,39 +220,7 @@ if __name__ == "__main__":
     alpha = 0.001
     gamma = 0.1
     agent = DQNAgent(env=env, epsilon=1.0, alpha=alpha, gamma=gamma, time=7500)
-    average_payouts = []
-    payout_list = []
-    summed_rewards = 0
-    state = env.reset()
-    state = reshape_state(state)
-    for sample in range(num_samples):
-        round = 1
-        total_payout = 0  # store total payout per sample
-        while round <= num_rounds:
-            action = agent.choose_action(state)
-            next_state, payout, done, _ = env.step(action)
-            summed_rewards += payout
-            next_state = np.reshape(next_state[0:2], [1, 2])
-            total_payout += payout
-            #  learning phase
-            agent.learn(state, action, payout, next_state, done)
-            state = next_state
-            state = reshape_state(state)
-
-            if done:
-                payout_list.append(payout)
-                state = env.reset()  # Environment deals new cards to player and dealer
-                state = reshape_state(state)
-                round += 1
-
-        average_payouts.append(total_payout)
-        # get the optimal strategy and play blackjack using this strategy to see the performance
-        optimal_strategy = agent.get_optimal_strategy(alpha, gamma);
-        optimal_strategy.to_csv('optimal_strategy_test.csv')
-        reward = 0  # init reward in order that reward has a value before we assign it in the play_optimal_strat
-        # comment out below line if you want to play the computed optimal strategy on our agent
-        # play = agent.play_optimal_strategy(optimal_strategy, reward)
-
+    average_payouts, payout_list = agent.run(num_rounds, num_samples, alpha, gamma)
 
 # this plots and saves outcomes in csv files and prints to console
 agent.print_and_plot_outcome(payout_list)
