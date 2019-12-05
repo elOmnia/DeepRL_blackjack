@@ -146,7 +146,37 @@ class DQNAgent():
 
         if done:
             state = env.reset()
-        return average_payouts
+        return
+
+    def print_and_plot_outcome(self,payout_list):
+        print(payout_list[-100:])
+        payout_list_last = payout_list[-100:]
+        winning = payout_list_last.count(1) / len(payout_list_last)
+        drawing = payout_list_last.count(0) / len(payout_list_last)
+        loosing = payout_list_last.count(-1) / len(payout_list_last)
+
+        # save winning, drawing and loosing probability in a file with according name and the parameters
+        index = (alpha, gamma)
+        win_loose_draw_file = pd.DataFrame(index=index, columns=['Win', 'Draw', 'Loose'])
+        for ind in index:
+            win_loose_draw_file.loc[ind, 'Win'] = winning
+            win_loose_draw_file.loc[ind, 'Draw'] = drawing
+            win_loose_draw_file.loc[ind, 'Loose'] = loosing
+
+        win_loose_draw_file.to_csv(
+            'winning_loosing_drawing_probabilities' + str(num_rounds) + 'nr' + str(num_samples) + 'ns' + str(
+                alpha) + 'alpha' + str(gamma) + 'gamma' + '.csv')
+
+        print('num_rounds', num_rounds, 'num_samples', num_samples, 'alpha', alpha, 'gamma', gamma)
+        print("winning", winning, "drawing", drawing, "loosing", loosing)
+
+        plt.plot(average_payouts)
+        plt.xlabel('num_samples' + str(num_samples))
+        plt.ylabel('payout after' +str(num_rounds) + 'num_rounds')
+        plt.savefig('DQN_blackjack' + str(num_rounds) + 'nr' + str(num_samples) + 'ns' + str(alpha) + 'alpha' + str(
+            gamma) + 'gamma' + '.png')
+        plt.show()
+        return
 
 
 if __name__ == "__main__":
@@ -188,30 +218,6 @@ if __name__ == "__main__":
         # comment out below line if you want to play the computed optimal strategy on our agent
         # play = agent.play_optimal_strategy(optimal_strategy, reward)
 
-print(payout_list[-100:])
-payout_list_last = payout_list[-100:]
-winning = payout_list_last.count(1) / len(payout_list_last)
-drawing = payout_list_last.count(0) / len(payout_list_last)
-loosing = payout_list_last.count(-1) / len(payout_list_last)
 
-# save winning, drawing and loosing probability in a file with according name and the parameters
-index = (alpha, gamma)
-win_loose_draw_file = pd.DataFrame(index=index, columns=['Win', 'Draw', 'Loose'])
-for ind in index:
-   win_loose_draw_file.loc[ind, 'Win'] = winning
-   win_loose_draw_file.loc[ind, 'Draw'] = drawing
-   win_loose_draw_file.loc[ind, 'Loose'] = loosing
-
-win_loose_draw_file.to_csv(
-    'winning_loosing_drawing_probabilities' + str(num_rounds) + 'nr' + str(num_samples) + 'ns' + str(
-        alpha) + 'alpha' + str(gamma) + 'gamma' + '.csv')
-
-print('num_rounds', num_rounds, 'num_samples', num_samples, 'alpha', alpha, 'gamma', gamma)
-print("winning", winning, "drawing", drawing, "loosing", loosing)
-
-plt.plot(average_payouts)
-plt.xlabel('num_samples')
-plt.ylabel('payout after 1000 rounds')
-plt.savefig('DQN_blackjack' + str(num_rounds) + 'nr' + str(num_samples) + 'ns' + str(alpha) + 'alpha' + str(
-    gamma) + 'gamma' + '.png')
-plt.show()
+# this plots and saves outcomes in csv files and prints to console
+agent.print_and_plot_outcome(payout_list)
