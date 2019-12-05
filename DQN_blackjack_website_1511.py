@@ -175,7 +175,8 @@ class DQNAgent():
         plt.ylabel('payout after' +str(num_rounds) + 'num_rounds')
         plt.savefig('DQN_blackjack' + str(num_rounds) + 'nr' + str(num_samples) + 'ns' + str(alpha) + 'alpha' + str(
             gamma) + 'gamma' + '.png')
-        plt.show()
+        #plt.show()
+        #plt.close()
         return
 
     def run(self, num_rounds, num_samples, alpha, gamma):
@@ -217,10 +218,16 @@ class DQNAgent():
 if __name__ == "__main__":
     num_rounds = 100  # Payout calculated over num_rounds #1000000
     num_samples = 50  # num_rounds simulated over num_samples #500000
-    alpha = 0.001
-    gamma = 0.1
-    agent = DQNAgent(env=env, epsilon=1.0, alpha=alpha, gamma=gamma, time=7500)
-    average_payouts, payout_list = agent.run(num_rounds, num_samples, alpha, gamma)
 
+    alphas = [0.001, 0.1, 0.5, 0.9, 0.99]
+    gammas = [0.001, 0.1, 0.5, 0.9, 0.99]
+
+    for alpha in alphas:
+        print('alpha', alpha)
+        for gamma in gammas:
+            print('gamma', gamma)
+            agent = DQNAgent(env=env, epsilon=1.0, alpha=alpha, gamma=gamma, time=7500)
+            average_payouts, payout_list = agent.run(num_rounds, num_samples, alpha, gamma)
+            agent.print_and_plot_outcome(payout_list)
 # this plots and saves outcomes in csv files and prints to console
 agent.print_and_plot_outcome(payout_list)
