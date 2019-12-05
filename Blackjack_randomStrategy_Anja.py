@@ -1,54 +1,60 @@
 import gym
-import numpy as np
-import os
-SEP = ';'
-PATH = '/home/anjak/Dokumente'
+import matplotlib.pyplot as plt
+import timeit
+import pandas as pd
 
+start = timeit.default_timer()
+env = gym.make('Blackjack-v0')
+env.seed(0)
+env.reset()
 
+num_rounds = 1000  # Payout calculated over num_rounds
+# corresponds to number of episodes in the q learning algorithm for example (how many times we assign action and take
+# a step)
+num_samples = 1000  # num_rounds simulated over num_samples
+# how many times we run the test (can be varied, optimally big enough for good result but not bigger than needed)
 
-class BlackJackRandomAgent():
-    def __init__(self, num_episodes=1):
+average_payouts = []
+payout_list = []
 
-        self.env = gym.make('Blackjack-v0')
-        # Variable to store all the possible actions of the environment
-        nA = self.env.action_space.n
-        nS = self.env.observation_space
-        print('na', nA)
-        print('ns', nS)
+for sample in range(num_samples):
+    round = 1
+    total_payout = 0  # to store total payout over 'num_rounds'
 
-    def choose_random_action(self, state):
-        # randomly sample
-        return self.env.action_space.sample()
+    while round <= num_rounds:
+        action = env.action_space.sample()  # take random action
+        #         print('ACTION: ' + str(action))
 
+        obs, payout, is_done, info = env.step(action)
+        #         print('OBS: ' + str(obs))
+        #         print('PAYOUT: ' + str(payout))
+        #         print('ID_DONE: ' + str(is_done))
+        #         print('INFO: ' + str(info))
 
-    def run(self):
-        self.env = gym.make('Blackjack-v0')
+        total_payout += payout
+        if is_done:
+            payout_list.append(payout)
+            env.reset()  # Environment deals new cards to player and dealer
+            round += 1
+    average_payouts.append(total_payout)
+df = pd.DataFrame(average_payouts, columns= ['average_payouts'])
+#print (df)
+export_csv = df.to_csv (r'C:/Users/sebas/Desktop/DRL/randomstart_anja.csv', index = None, header=True)
 
-        while True:
-            current_state = self.env.reset()
-            done = False
+payout_list_last = payout_list[-100000:]
+winning = payout_list_last.count(1)/len(payout_list_last)
+drawing = payout_list_last.count(0)/len(payout_list_last)
+loosing = payout_list_last.count(-1)/len(payout_list_last)
+natural = payout_list_last.count(1.5)/len(payout_list_last)
+print("length",len(payout_list))
+print("winnin",winning,"drawing",drawing,"loosing",loosing, "natural",natural)
 
-            while not done:
-                action = self.choose_random_action(current_state)
-                obs, reward, done, _ = self.env.step(action)
-                # print('state', obs)e
-                # update state to newstate
-                current_state = obs
-            print('finished run with reward', reward);
-
-    def write_csv(matrix, file_name):
-        # file_name= 'qlearningmatrixgridproblems.csv'
-        outpath = os.path.join(PATH, file_name)
-        np.savetxt(outpath, matrix, delimiter=SEP)
-
-    def read_csv(inpath):
-        # inpath = '/home/anjak/Dokumente/qlearningmatrix.csv'
-        matrix = np.loadtxt(open(inpath, "rb"), delimiter=SEP, skiprows=0)
-        return matrix
-
-
-
-if __name__ == "__main__":
-    agent = BlackJackRandomAgent()
-    # no training necessary as this is the random strategy
-    agent.run()
+"""print("Average payout after {} rounds is {}".format(num_rounds, sum(average_payouts) / num_samples))
+end = timeit.default_timer()
+print('Runtime ' + str(end - start))
+plt.plot(average_payouts)
+plt.xlabel('num_samples')
+plt.ylabel('payout after 1000 rounds')
+plt.show(block=False)
+plt.close()
+"""
