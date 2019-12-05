@@ -48,6 +48,18 @@ class DQNAgent():
 
         return model
 
+    # build a bigger neural network (use either this one or the above one depending on how many rounds/samples taken)
+    def _build_big_model(self):
+        model = Sequential()
+        model.add(Dense(32,input_shape=(2,), kernel_initializer='random_uniform', activation='relu'))
+        model.add(Dense(16, activation='relu'))
+        # TODO: here add another layer --> TODO try to paint this NN to better see input output sizes
+        #TODO: this line below does not work add it correctly
+       # model.add(Dense(8, activation='relu'))
+        model.add(Dense(self.action_size, activation='softmax'))
+        model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.alpha))
+
+
     def choose_action(self, state):
         """
         Choose which action to take, based on the observation.
@@ -88,7 +100,7 @@ class DQNAgent():
         target_f[0][action] = target
         self.model.fit(state, target_f, epochs=1, verbose=0)
 
-    def get_optimal_strategy(self):
+    def get_optimal_strategy(self,alpha,gamma):
         index = []
         for x in range(0, 21):
             for y in range(1, 11):
@@ -102,7 +114,7 @@ class DQNAgent():
             df.loc[ind, 'Hit'] = outcome[0][1]
 
         df['Optimal'] = df.apply(lambda x: 'Hit' if x['Hit'] >= x['Stand'] else 'Stand', axis=1)
-        df.to_csv('optimal_policy_100r_50s_epsilon_0_001.csv')
+        df.to_csv('optimal_policy' +str(num_rounds)+'nr'+str(num_samples)+'ns'+str(alpha)+'alpha'+str(gamma)+'gamma' +'.csv')
         return df
 
     def play_optimal_strategy(self, optimal_strategy, reward):
@@ -140,7 +152,9 @@ class DQNAgent():
 if __name__ == "__main__":
     num_rounds = 100  # Payout calculated over num_rounds #1000000
     num_samples = 50  # num_rounds simulated over num_samples #500000
-    agent = DQNAgent(env=env, epsilon=1.0, alpha=0.001, gamma=0.1, time=7500)
+    alpha = 0.001
+    gamma = 0.1
+    agent = DQNAgent(env=env, epsilon=1.0, alpha=alpha, gamma=gamma, time=7500)
     average_payouts = []
     payout_list = []
     summed_rewards = 0
@@ -168,24 +182,26 @@ if __name__ == "__main__":
 
         average_payouts.append(total_payout)
         # get the optimal strategy and play blackjack using this strategy to see the performance
-        optimal_strategy = agent.get_optimal_strategy();
+        optimal_strategy = agent.get_optimal_strategy(alpha,gamma);
         optimal_strategy.to_csv('optimal_strategy_test.csv')
         reward = 0  # init reward in order that reward has a value before we assign it in the play_optimal_strat
-        play = agent.play_optimal_strategy(optimal_strategy, reward)
-        average_payouts = play
-        # TODO: num_samples or num_rounds are the num_episodes in other algs?
+        # comment out below line if you want to play the computed optimal strategy on our agent
+        # play = agent.play_optimal_strategy(optimal_strategy, reward)
+
 
 print(payout_list[-100:])
 payout_list_last = payout_list[-100:]
 winning = payout_list_last.count(1)/len(payout_list_last)
 drawing = payout_list_last.count(0)/len(payout_list_last)
 loosing = payout_list_last.count(-1)/len(payout_list_last)
-natural = payout_list_last.count(1.5)/len(payout_list_last)
 
-print("winnin",winning,"drawing",drawing,"loosing",loosing, "natural",natural)
+# save winning, drawing and loosing probability in a file with according name and the parameters
+
+
+print("winnin",winning,"drawing",drawing,"loosing",loosing)
 
 plt.plot(average_payouts)
 plt.xlabel('num_samples')
 plt.ylabel('payout after 1000 rounds')
-plt.savefig('DQN_blackjack_1000000r_500000s_a0_001.png')
+plt.savefig('DQN_blackjack'+str(num_rounds)+'nr'+str(num_samples)+'ns'+str(alpha)+'alpha'+str(gamma)+'gamma'+'.png')
 plt.show()
