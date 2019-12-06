@@ -16,5 +16,8 @@ plt.show()
 plt.close()
 
 
+# compare against random and basic, import random and basic csv here
+random_average_payouts = pd.read_csv('path')
+
 
 
