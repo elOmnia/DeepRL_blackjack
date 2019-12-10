@@ -8,7 +8,7 @@ We solved Blackjack using Qlearning, SARSA and Qlearning with Neural networks (D
 These are all Reinforcement learning techniques. 
 The main code sources where:
 
-1) Q-learning: 
+1) Q-learning: QLearning w Writer_Sebi
 
 
 CodeSource
