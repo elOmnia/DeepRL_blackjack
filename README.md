@@ -21,7 +21,7 @@ CodeSource
 
 3) Deep Q-learning: 
  	DQN_blackjack_website_1511.py
-
+  DQN_anja_1012 (same as above but with saving the dataframe of averagepayouts for the plots)
 Codesource
 -->  https://github.com/ml874/Blackjack--Reinforcement-Learning/blob/master/Blackjack-%20DQN%20(Only%20Hit%20or%20Stand).ipynb
 
