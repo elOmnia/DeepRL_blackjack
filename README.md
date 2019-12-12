@@ -12,12 +12,12 @@ The main code sources where:
 
 
 CodeSource
---> 
+--> https://github.com/Pradhyo/blackjack/blob/master/blackjack.ipynb
 
 2) SARSA: 
 
 CodeSource
---> 
+--> https://github.com/Pradhyo/blackjack/blob/master/blackjack.ipynb (adaptions from that to SARSA)
 
 3) Deep Q-learning: 
  	DQN_blackjack_website_1511.py
