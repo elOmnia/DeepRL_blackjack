@@ -1,3 +1,5 @@
+##Oiginal Sourcecode From: https://github.com/Pradhyo/blackjack/blob/master/blackjack.ipynb
+
 import gym
 import matplotlib.pyplot as plt
 from gym import wrappers
