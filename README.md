@@ -14,7 +14,7 @@ The main code sources where:
 CodeSource
 --> https://github.com/Pradhyo/blackjack/blob/master/blackjack.ipynb
 
-2) SARSA: 
+2) SARSA: https://colab.research.google.com/drive/1mslsNMjxVXrrMjr-uMWQVDmdkGCRIErf#scrollTo=-vgAu6f8jM1x
 
 CodeSource
 --> https://github.com/Pradhyo/blackjack/blob/master/blackjack.ipynb (adaptions from that to SARSA)
